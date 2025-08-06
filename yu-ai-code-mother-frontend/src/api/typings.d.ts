@@ -61,6 +61,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseDiffResultVO = {
+    code?: number
+    data?: DiffResultVO
+    message?: string
+  }
+
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
@@ -112,6 +118,12 @@ declare namespace API {
     id?: number
   }
 
+  type DiffResultVO = {
+    hasDiff?: boolean
+    diffFileCount?: number
+    diffContentMap?: Record<string, any>
+  }
+
   type getAppVOByIdByAdminParams = {
     id: number
   }
@@ -126,6 +138,11 @@ declare namespace API {
 
   type getUserVOByIdParams = {
     id: number
+  }
+
+  type getVersionDiffParams = {
+    codeGenTypeEnum: string
+    appId: number
   }
 
   type LoginUserVO = {

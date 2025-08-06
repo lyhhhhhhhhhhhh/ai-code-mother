@@ -12,6 +12,12 @@
           </template>
           应用详情
         </a-button>
+        <a-button type="default" @click="showVersionDiff">
+          <template #icon>
+            <GitDiffOutlined />
+          </template>
+          查看版本差异
+        </a-button>
         <a-button type="primary" @click="deployApp" :loading="deploying">
           <template #icon>
             <CloudUploadOutlined />
@@ -135,6 +141,14 @@
       :deploy-url="deployUrl"
       @open-site="openDeployedSite"
     />
+
+    <!-- 版本差异弹窗 -->
+    <VersionDiffModal
+      :open="versionDiffVisible"
+      :app-id="appInfo?.id"
+      :code-gen-type="appInfo?.codeGenType"
+      @update:open="versionDiffVisible = $event"
+    />
   </div>
 </template>
 
@@ -154,6 +168,7 @@ import request from '@/request'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
+import VersionDiffModal from '@/components/VersionDiffModal.vue'
 import aiAvatar from '@/assets/aiAvatar.png'
 import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
 
@@ -206,9 +221,17 @@ const isAdmin = computed(() => {
 // 应用详情相关
 const appDetailVisible = ref(false)
 
+// 版本差异相关
+const versionDiffVisible = ref(false)
+
 // 显示应用详情
 const showAppDetail = () => {
   appDetailVisible.value = true
+}
+
+// 显示版本差异
+const showVersionDiff = () => {
+  versionDiffVisible.value = true
 }
 
 // 获取应用信息

@@ -1,6 +1,7 @@
 package com.lyh.yuaicodemather.controller;
 
 import com.lyh.yuaicodemather.constant.AppConstant;
+import com.lyh.yuaicodemather.utils.VersionUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -44,8 +45,12 @@ public class StaticResourceController {
             if (resourcePath.equals("/")) {
                 resourcePath = "/index.html";
             }
+            String latestVersionDir = VersionUtils.getLatestVersionDir(deployKey);
+            if (latestVersionDir == null) {
+                return ResponseEntity.notFound().build();
+            }
+            String filePath = PREVIEW_ROOT_DIR + "/" + deployKey + "/" + latestVersionDir + resourcePath;
             // 构建文件路径
-            String filePath = PREVIEW_ROOT_DIR + "/" + deployKey + resourcePath;
             File file = new File(filePath);
             // 检查文件是否存在
             if (!file.exists()) {

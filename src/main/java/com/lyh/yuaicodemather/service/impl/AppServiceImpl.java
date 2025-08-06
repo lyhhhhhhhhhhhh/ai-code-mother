@@ -11,11 +11,14 @@ import com.lyh.yuaicodemather.exception.BusinessException;
 import com.lyh.yuaicodemather.exception.ErrorCode;
 import com.lyh.yuaicodemather.exception.ThrowUtils;
 import com.lyh.yuaicodemather.model.dto.app.AppQueryRequest;
+import com.lyh.yuaicodemather.model.entity.DiffResultVO;
 import com.lyh.yuaicodemather.model.entity.User;
 import com.lyh.yuaicodemather.model.enums.CodeGenTypeEnum;
 import com.lyh.yuaicodemather.model.vo.app.AppVO;
 import com.lyh.yuaicodemather.model.vo.user.UserVO;
 import com.lyh.yuaicodemather.service.UserService;
+import com.lyh.yuaicodemather.utils.FolderDiffUtil;
+import com.lyh.yuaicodemather.utils.VersionUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.lyh.yuaicodemather.model.entity.App;
@@ -26,6 +29,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -154,6 +158,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
                 .orderBy(sortField, "ascend".equals(sortOrder));
     }
 
+    /**
+     * 部署应用
+     * @param appId 应用ID
+     * @param loginUser 登录用户
+     * @return
+     */
     @Override
     public String deployApp(Long appId, User loginUser) {
         // 1. 参数校验
@@ -175,7 +185,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         // 5. 获取代码生成类型，构建源目录路径
         String codeGenType = app.getCodeGenType();
         String sourceDirName = codeGenType + "_" + appId;
-        String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+        String latestVersionDir = VersionUtils.getLatestVersionDir(sourceDirName);
+        String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName + File.separator + latestVersionDir;
         // 6. 检查源目录是否存在
         File sourceDir = new File(sourceDirPath);
         if (!sourceDir.exists() || !sourceDir.isDirectory()) {
@@ -199,4 +210,32 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         return String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
     }
 
+    /**
+     * 查看文件diff
+     * @param codeGenTypeEnum 文件类型
+     * @param appId 应用ID
+     * @return
+     */
+    @Override
+    public DiffResultVO getVersionDiff(String codeGenTypeEnum, Long appId) {
+        // 1.参数校验
+        ThrowUtils.throwIf(CodeGenTypeEnum.getEnumByValue(codeGenTypeEnum) == null, ErrorCode.PARAMS_ERROR, "代码生成类型不正确");
+        ThrowUtils.throwIf(StrUtil.isBlank(codeGenTypeEnum), ErrorCode.PARAMS_ERROR, "代码生成类型不能为空");
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 2.获取JSON文件 查询最近的两次文件差异
+        String deployKey = codeGenTypeEnum + "_" + appId;
+        String[] latestTwoVersionDirs = VersionUtils.getLatestTwoVersionDirs(deployKey);
+        // 如果长度为1 抛出异常 没有版本差异
+        ThrowUtils.throwIf(latestTwoVersionDirs == null || latestTwoVersionDirs.length == 0, ErrorCode.OPERATION_ERROR,"没有版本差异");
+        ThrowUtils.throwIf(latestTwoVersionDirs.length < 2 || latestTwoVersionDirs[1] == null, ErrorCode.OPERATION_ERROR,"没有版本差异");
+        // 3.获取两个文件夹
+        String oldVersionPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + deployKey + File.separator + latestTwoVersionDirs[1];
+        String newVersionPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + deployKey + File.separator + latestTwoVersionDirs[0];
+        // 4.比较两个文件的差异
+        try {
+            return FolderDiffUtil.compareFolders(oldVersionPath, newVersionPath);
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "比较文件差异失败：");
+        }
+    }
 }

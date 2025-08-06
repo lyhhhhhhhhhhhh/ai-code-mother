@@ -13,6 +13,7 @@ import com.lyh.yuaicodemather.exception.BusinessException;
 import com.lyh.yuaicodemather.exception.ErrorCode;
 import com.lyh.yuaicodemather.exception.ThrowUtils;
 import com.lyh.yuaicodemather.model.dto.app.*;
+import com.lyh.yuaicodemather.model.entity.DiffResultVO;
 import com.lyh.yuaicodemather.model.entity.User;
 import com.lyh.yuaicodemather.model.enums.CodeGenTypeEnum;
 import com.lyh.yuaicodemather.model.vo.app.AppVO;
@@ -51,7 +52,6 @@ public class AppController {
 
     /**
      * 聊天生成代码
-     *
      * @param appId   应用 id
      * @param message 聊天消息
      * @param request 请求
@@ -342,5 +342,20 @@ public class AppController {
         return ResultUtils.success(deployUrl);
     }
 
-
+    /**
+     * 查看文件diff
+     *
+     * @param codeGenTypeEnum 文件类型
+     * @param appId           应用ID
+     * @return
+     */
+    @GetMapping("/diff")
+    public BaseResponse<DiffResultVO> getVersionDiff(@RequestParam String codeGenTypeEnum, @RequestParam Long appId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(codeGenTypeEnum), ErrorCode.PARAMS_ERROR, "代码生成类型不能为空");
+        ThrowUtils.throwIf(CodeGenTypeEnum.getEnumByValue(codeGenTypeEnum) == null, ErrorCode.PARAMS_ERROR, "代码生成类型不正确");
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 调用服务获取版本差异
+        DiffResultVO diffResultVO = appService.getVersionDiff(codeGenTypeEnum, appId);
+        return ResultUtils.success(diffResultVO);
+    }
 }

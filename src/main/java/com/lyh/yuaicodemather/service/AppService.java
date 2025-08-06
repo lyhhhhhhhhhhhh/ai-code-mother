@@ -1,7 +1,9 @@
 package com.lyh.yuaicodemather.service;
 
 import com.lyh.yuaicodemather.model.dto.app.AppQueryRequest;
+import com.lyh.yuaicodemather.model.entity.DiffResultVO;
 import com.lyh.yuaicodemather.model.entity.User;
+import com.lyh.yuaicodemather.model.enums.CodeGenTypeEnum;
 import com.lyh.yuaicodemather.model.vo.app.AppVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
@@ -26,4 +28,6 @@ public interface AppService extends IService<App> {
     Flux<String> chatToGenCode(Long appId, String prompt, User loginUser);
 
     String deployApp(Long appId, User loginUser);
+
+    DiffResultVO getVersionDiff(String codeGenTypeEnum, Long appId);
 }

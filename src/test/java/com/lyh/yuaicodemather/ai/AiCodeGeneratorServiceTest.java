@@ -5,6 +5,7 @@ import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import reactor.core.publisher.Flux;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,5 +25,6 @@ class AiCodeGeneratorServiceTest {
     void generateMultiFileCode() {
         HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHtmlCode("做一个程序员LKING的留言板，不超过50行");
         Assertions.assertNotNull(htmlCodeResult);
+        Flux<String> codeStream = aiCodeGeneratorService.generateHtmlCodeStream("刚刚做了什么");
     }
 }

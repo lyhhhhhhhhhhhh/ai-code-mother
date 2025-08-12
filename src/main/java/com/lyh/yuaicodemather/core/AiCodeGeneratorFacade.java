@@ -1,15 +1,14 @@
 package com.lyh.yuaicodemather.core;
 
 import com.lyh.yuaicodemather.ai.AiCodeGeneratorService;
+import com.lyh.yuaicodemather.ai.AiCodeGeneratorServiceFactory;
 import com.lyh.yuaicodemather.ai.model.HtmlCodeResult;
 import com.lyh.yuaicodemather.ai.model.MultiFileCodeResult;
 import com.lyh.yuaicodemather.core.parser.CodeParserExecutor;
 import com.lyh.yuaicodemather.core.saver.CodeFileSaverExecutor;
 import com.lyh.yuaicodemather.exception.BusinessException;
 import com.lyh.yuaicodemather.exception.ErrorCode;
-import com.lyh.yuaicodemather.model.entity.App;
 import com.lyh.yuaicodemather.model.enums.CodeGenTypeEnum;
-import com.lyh.yuaicodemather.service.AppService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,9 @@ import java.io.File;
 public class AiCodeGeneratorFacade {
 
     @Resource
-    private AiCodeGeneratorService aiCodeGeneratorService;
+    private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
+
+
 
     /**
      * 统一入口，根据需求生成并且保存代码
@@ -40,6 +41,8 @@ public class AiCodeGeneratorFacade {
         if (userMessage == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数不能为空");
         }
+        // 根据appId 获取相应的AI服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         return switch (codeGenTypeEnum){
             case HTML -> {
                 HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHtmlCode(userMessage);
@@ -69,6 +72,8 @@ public class AiCodeGeneratorFacade {
         if (userMessage == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数不能为空");
         }
+        // 根据appId 获取相应的AI服务实例
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         return switch (codeGenTypeEnum){
             case HTML -> {
                 Flux<String> codeStream = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
@@ -84,7 +89,6 @@ public class AiCodeGeneratorFacade {
             }
         };
     }
-
 
     /**
      * 生成多个文件并保存(流式)

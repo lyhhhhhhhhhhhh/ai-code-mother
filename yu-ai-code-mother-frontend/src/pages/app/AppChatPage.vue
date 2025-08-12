@@ -6,6 +6,12 @@
         <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
       </div>
       <div class="header-right">
+        <a-button type="default" @click="showVersionDiff">
+          <template #icon>
+            <HistoryOutlined />
+          </template>
+          查看版本差异
+        </a-button>
         <a-button type="default" @click="showAppDetail">
           <template #icon>
             <InfoCircleOutlined />
@@ -140,6 +146,13 @@
       :deploy-url="deployUrl"
       @open-site="openDeployedSite"
     />
+
+    <!-- 版本差异弹窗 -->
+    <VersionDiffModal
+      v-model:open="versionDiffVisible"
+      :app-id="appId"
+      :code-gen-type="appInfo?.codeGenType"
+    />
   </div>
 </template>
 
@@ -160,6 +173,7 @@ import request from '@/request'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
+import VersionDiffModal from '@/components/VersionDiffModal.vue'
 import aiAvatar from '@/assets/aiAvatar.png'
 import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
 
@@ -168,6 +182,7 @@ import {
   SendOutlined,
   ExportOutlined,
   InfoCircleOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -218,9 +233,17 @@ const isAdmin = computed(() => {
 // 应用详情相关
 const appDetailVisible = ref(false)
 
+// 版本差异相关
+const versionDiffVisible = ref(false)
+
 // 显示应用详情
 const showAppDetail = () => {
   appDetailVisible.value = true
+}
+
+// 显示版本差异
+const showVersionDiff = () => {
+  versionDiffVisible.value = true
 }
 
 // 加载对话历史
